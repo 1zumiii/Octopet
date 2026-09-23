@@ -8,6 +8,10 @@ struct Animator {
     private(set) var tick: Int
     private(set) var blinkLeft = 0
 
+    /// "Slacking mode": switch between idle and typing on its own, at random intervals.
+    var autoSwitch = false { didSet { scheduleNextSwitch() } }
+    private var ticksUntilSwitch = 0
+
     init(mode: Mode = .idle, tick: Int = 0) { self.mode = mode; self.tick = tick }
 
     /// Timelines as (duration in ticks, frame).
@@ -38,8 +42,21 @@ struct Animator {
     mutating func advance() {
         tick += 1
         if blinkLeft > 0 { blinkLeft -= 1 } else if mode == .idle && Int.random(in: 0..<300) == 0 { blinkLeft = 8 }
-        if mode == .pullOut && tick >= Self.duration(Self.pullOut) { mode = .typing; tick = 0 }
-        if mode == .putAway && tick >= Self.duration(Self.putAway) { mode = .idle; tick = 0 }
+        if mode == .pullOut && tick >= Self.duration(Self.pullOut) { mode = .typing; tick = 0; scheduleNextSwitch() }
+        if mode == .putAway && tick >= Self.duration(Self.putAway) { mode = .idle; tick = 0; scheduleNextSwitch() }
+        if autoSwitch && (mode == .idle || mode == .typing) {
+            ticksUntilSwitch -= 1
+            if ticksUntilSwitch <= 0 { click() }
+        }
+    }
+
+    /// Seconds to stay in the current state: mostly working (45s–3min) with the
+    /// occasional short slack-off (8–25s). Averaging two random draws clusters
+    /// around the middle, so extreme stretches are rare.
+    private mutating func scheduleNextSwitch() {
+        let (lo, hi): (Double, Double) = mode == .typing ? (45, 180) : (8, 25)
+        let r = (Double.random(in: 0...1) + Double.random(in: 0...1)) / 2
+        ticksUntilSwitch = Int((lo + (hi - lo) * r) * 60)
     }
 
     /// Click toggles between idle and typing (ignored mid-transition).

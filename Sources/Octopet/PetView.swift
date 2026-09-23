@@ -3,11 +3,16 @@ import AppKit
 /// Transparent view that renders the pet and handles click / drag / right-click menu.
 final class PetView: NSView {
     static let sizes: [(title: () -> String, scale: Int)] = [
-        ({ Strings.sizeOriginal }, 3), ({ Strings.sizeLarge }, 4), ({ Strings.sizeHuge }, 6),
+        ({ Strings.sizeOriginal }, 3), ({ Strings.sizeLarge }, 4), ({ Strings.sizeHuge }, 6), ({ Strings.sizeGiant }, 9),
     ]
     private static let scaleKey = "scale"
+    private static let autoKey = "autoSwitch"
 
-    var animator = Animator()
+    var animator: Animator = {
+        var a = Animator()
+        a.autoSwitch = UserDefaults.standard.bool(forKey: PetView.autoKey)
+        return a
+    }()
     var scale: CGFloat = {
         let saved = UserDefaults.standard.integer(forKey: PetView.scaleKey)
         return CGFloat(saved > 0 ? saved : 3)
@@ -64,6 +69,9 @@ final class PetView: NSView {
             menu.addItem(item)
         }
         menu.addItem(.separator())
+        let auto = NSMenuItem(title: Strings.autoSwitch, action: #selector(toggleAuto), keyEquivalent: "")
+        auto.target = self; auto.state = animator.autoSwitch ? .on : .off
+        menu.addItem(auto)
         let login = NSMenuItem(title: Strings.launchAtLogin, action: #selector(toggleLogin), keyEquivalent: "")
         login.target = self; login.state = LoginItem.isEnabled ? .on : .off
         menu.addItem(login)
@@ -73,6 +81,11 @@ final class PetView: NSView {
     }
 
     @objc private func toggleLogin() { LoginItem.setEnabled(!LoginItem.isEnabled) }
+
+    @objc private func toggleAuto() {
+        animator.autoSwitch.toggle()
+        UserDefaults.standard.set(animator.autoSwitch, forKey: Self.autoKey)
+    }
 
     @objc private func pickSize(_ item: NSMenuItem) {
         scale = CGFloat(item.tag)

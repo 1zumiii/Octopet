@@ -30,10 +30,11 @@ Requires macOS 11+, runs natively on Apple silicon and Intel.
 | --- | --- |
 | **Click** | Pulls out the laptop and starts typing; click again to put it away |
 | **Drag** | Move it anywhere on screen |
-| **Right-click** | Size (Original / Bigger / Extra large), Launch at login, Quit |
+| **Right-click** | Size (Original / Bigger / Extra large / Giant), Work-life balance, Launch at login, Quit |
 
 - It floats above other windows and shows up on every Space
 - No Dock icon — to quit, right-click → **Bye, little octopus 👋**
+- Turn on **Work-life balance** and it works on its own, taking the occasional short break (works 45 s–3 min, slacks off 8–25 s, both random)
 - The menu follows your system language (English / Chinese)
 
 ## Build from source
